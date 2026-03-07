@@ -165,10 +165,10 @@ export default function BookingSystem() {
       <nav className="booking-nav" style={styles.nav}>
         <div style={{...styles.logo, cursor:"pointer"}} onClick={handleLogoClick} role="button" tabIndex={0} onKeyDown={e=>e.key==="Enter"&&handleLogoClick()}>✂ CHOP SHOP</div>
         <div style={styles.navLinks}>
-          <button style={{...styles.navBtn, ...(view==="booking"?styles.navActive:{})}} onClick={()=>setView("booking")}>Book</button>
-          <button style={{...styles.navBtn, ...(view==="mybookings"?styles.navActive:{})}} onClick={()=>setView("mybookings")}>My bookings</button>
+          <button className="nav-btn" style={{...styles.navBtn, ...(view==="booking"?styles.navActive:{})}} onClick={()=>setView("booking")}>Book</button>
+          <button className="nav-btn" style={{...styles.navBtn, ...(view==="mybookings"?styles.navActive:{})}} onClick={()=>setView("mybookings")}>My bookings</button>
           {showAdminLink && (
-            <button style={{...styles.navBtn, ...(view==="admin"?styles.navActive:{})}} onClick={()=>setView("admin")}>Admin</button>
+            <button className="nav-btn" style={{...styles.navBtn, ...(view==="admin"?styles.navActive:{})}} onClick={()=>setView("admin")}>Admin</button>
           )}
         </div>
       </nav>
@@ -280,7 +280,7 @@ function BookingView({ appointments, addAppointment, isDayOff, isSlotBlocked }) 
   if (done) return (
     <div className="booking-center" style={styles.center}>
       <div className="confirm-box" style={styles.confirmBox}>
-        <div style={styles.checkmark}>✓</div>
+        <div className="checkmark" style={styles.checkmark}>✓</div>
         <h2 style={styles.confirmTitle}>Appointment Booked!</h2>
         <div style={{ ...styles.summaryBox, textAlign: "left", marginBottom: "20px" }}>
           <p style={styles.summaryRow}><span style={styles.summaryLabel}>Client</span>{info.name}</p>
@@ -298,18 +298,26 @@ function BookingView({ appointments, addAppointment, isDayOff, isSlotBlocked }) 
   return (
     <div className="booking-wrap" style={styles.bookingWrap}>
       {/* PROGRESS */}
-      <div className="booking-progress" style={styles.progress}>
+      <div className="booking-progress" style={{ ...styles.progress, alignItems: "flex-start" }}>
         {["Barber","Service","Date & Time","Details"].map((s,i)=>{
           const isDone = step > i + 1;
           const isActive = step === i + 1;
+          const isLast = i === 3;
           return (
-            <div key={s} className="progress-step" style={styles.progressStep}>
-              <div className="progress-dot" style={{
-                ...styles.progressDot,
-                ...(isActive ? { borderColor: C.gold, color: C.gold, background: C.goldLight } : {}),
-                ...(isDone ? { borderColor: C.green, color: C.green, background: "rgba(48,209,88,0.1)" } : {}),
-              }}>{isDone ? "✓" : i + 1}</div>
-              <span style={{ ...styles.progressLabel, ...(isActive ? { color: C.gold } : {}), ...(isDone ? { color: C.green } : {}) }}>{s}</span>
+            <div key={s} style={{ display: "contents" }}>
+              <div className="progress-step" style={styles.progressStep}>
+                <div className={`progress-dot${isDone ? " progress-dot-done" : ""}`} style={{
+                  ...styles.progressDot,
+                  ...(isActive ? { borderColor: C.gold, color: C.gold, background: C.goldLight } : {}),
+                  ...(isDone ? { borderColor: C.green, color: C.green, background: "rgba(46,207,96,0.1)" } : {}),
+                }}>{isDone ? "✓" : i + 1}</div>
+                <span style={{ ...styles.progressLabel, ...(isActive ? { color: C.gold } : {}), ...(isDone ? { color: C.green } : {}) }}>{s}</span>
+              </div>
+              {!isLast && (
+                <div className="progress-connector">
+                  {isDone && <div className="progress-connector-fill" />}
+                </div>
+              )}
             </div>
           );
         })}
@@ -318,14 +326,16 @@ function BookingView({ appointments, addAppointment, isDayOff, isSlotBlocked }) 
       {/* STEP 1: BARBER */}
       {step===1 && (
         <Section title="Choose Your Barber">
-          <div style={styles.cardRow}>
-            {BARBERS.map(b => (
-              <button key={b.id} style={{...styles.barberCard, borderColor: b.color}}
-                className="bcard barber-card"
-                onClick={()=>{ setBarber(b); setStep(2); }}>
-                <div className="barber-avatar" style={{...styles.barberAvatar, background: b.color}}>{b.name[0]}</div>
-                <div style={styles.barberName}>{b.name}</div>
-              </button>
+          <div className="card-group" style={styles.cardRow}>
+            {BARBERS.map((b, i) => (
+              <div key={b.id} className="barber-card" style={{ flex: 1, minWidth: "120px", animationDelay: `${i * 65}ms` }}>
+                <button style={{...styles.barberCard, borderColor: b.color, width: "100%"}}
+                  className="bcard"
+                  onClick={()=>{ setBarber(b); setStep(2); }}>
+                  <div className="barber-avatar" style={{...styles.barberAvatar, background: b.color}}>{b.name[0]}</div>
+                  <div style={styles.barberName}>{b.name}</div>
+                </button>
+              </div>
             ))}
           </div>
         </Section>
@@ -334,13 +344,15 @@ function BookingView({ appointments, addAppointment, isDayOff, isSlotBlocked }) 
       {/* STEP 2: SERVICE */}
       {step===2 && (
         <Section title="Choose a Service" onBack={()=>setStep(1)}>
-          <div style={styles.serviceList}>
-            {SERVICES.map(s => (
-              <button key={s.id} style={styles.serviceCard} className="bcard service-card"
-                onClick={()=>{ setService(s); setDate(firstAvailDay); setTime(null); setStep(3); }}>
-                <span style={styles.serviceName}>{s.name}</span>
-                <span style={styles.serviceMeta}>{s.duration}min · <strong style={styles.servicePrice}>${s.price}</strong></span>
-              </button>
+          <div className="card-group" style={styles.serviceList}>
+            {SERVICES.map((s, i) => (
+              <div key={s.id} className="service-card" style={{ animationDelay: `${i * 40}ms` }}>
+                <button style={{...styles.serviceCard, width: "100%"}} className="bcard"
+                  onClick={()=>{ setService(s); setDate(firstAvailDay); setTime(null); setStep(3); }}>
+                  <span style={styles.serviceName}>{s.name}</span>
+                  <span style={styles.serviceMeta}>{s.duration}min · <strong style={styles.servicePrice}>${s.price}</strong></span>
+                </button>
+              </div>
             ))}
           </div>
         </Section>
@@ -355,6 +367,7 @@ function BookingView({ appointments, addAppointment, isDayOff, isSlotBlocked }) 
               return (
                 <button key={d}
                   disabled={off}
+                  className={`date-btn${date===d?" date-btn-active":""}`}
                   style={{...styles.dateBtn, ...(date===d?styles.dateBtnActive:{}), ...(off?styles.dateBtnOff:{})}}
                   onClick={()=>{ if(!off){ setDate(d); setTime(null); } }}>
                   <span style={styles.dateDow}>{dateLabel(d).split(",")[0]}</span>
@@ -379,6 +392,7 @@ function BookingView({ appointments, addAppointment, isDayOff, isSlotBlocked }) 
                       return (
                         <button key={h}
                           disabled={!avail}
+                          className={`time-btn${time===h?" time-btn-active":""}`}
                           style={{...styles.timeBtn, ...(time===h?styles.timeBtnActive:{}), ...(!avail?styles.timeBtnTaken:{})}}
                           onClick={()=>{ if(avail){ setTime(h); setStep(4); } }}>
                           {h}
@@ -514,11 +528,10 @@ function MyBookingsView({ appointments, cancelAppointment }) {
 
 // ─── ADMIN VIEW ───────────────────────────────────────────────────────────────
 function AdminView({ appointments, cancelAppointment, daysOff, toggleDayOff, blockedSlots, toggleBlockedSlot, onLogout, loggedInBarber }) {
-  const [tab, setTab] = useState("appointments"); // "appointments" | "schedule"
   const [filterBarber, setFilterBarber] = useState("all");
   const [calendarStart, setCalendarStart] = useState(todayStr());
   const [selectedAppt, setSelectedAppt] = useState(null);
-  const [blockDate, setBlockDate] = useState(todayStr());
+  const [calMode, setCalMode] = useState("view"); // "view" | "manage"
   const days = next7Days();
   const calDays = daysFromStart(calendarStart, 7);
 
@@ -538,19 +551,19 @@ function AdminView({ appointments, cancelAppointment, daysOff, toggleDayOff, blo
         </div>
         <button style={{ ...styles.cancelBtn, borderColor: C.muted, color: C.muted, background: "transparent" }} onClick={onLogout}>Sign out</button>
       </div>
-      <div style={styles.tabBar}>
-        <button style={{...styles.tabBtn,...(tab==="appointments"?styles.tabActive:{})}} onClick={()=>setTab("appointments")}>📋 Calendar</button>
-        <button style={{...styles.tabBtn,...(tab==="schedule"?styles.tabActive:{})}} onClick={()=>setTab("schedule")}>🗓 Days Off</button>
-      </div>
-
-      {tab==="appointments" && (
-        <div>
+      <div>
           <div style={styles.filterRow}>
             <span style={styles.filterLabel}>Filter:</span>
             {[{id:"all",name:"All Barbers"},...BARBERS].map(b=>(
               <button key={b.id} style={{...styles.filterBtn,...(filterBarber===String(b.id)?styles.filterActive:{})}}
                 onClick={()=>setFilterBarber(String(b.id))}>{b.name}</button>
             ))}
+          </div>
+
+          {/* Mode toggle pill */}
+          <div style={{ display: "flex", gap: "4px", background: C.card, borderRadius: "8px", padding: "3px", width: "fit-content", marginBottom: "16px" }}>
+            <button onClick={() => setCalMode("view")} style={{ background: calMode === "view" ? C.elevated : "transparent", border: "none", color: calMode === "view" ? C.text : C.muted, padding: "8px 18px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: 500, fontFamily: FONT, transition: "all .2s ease", boxShadow: calMode === "view" ? "0 1px 4px rgba(0,0,0,.2)" : "none" }}>View</button>
+            <button onClick={() => setCalMode("manage")} style={{ background: calMode === "manage" ? "rgba(255,69,58,0.15)" : "transparent", border: "none", color: calMode === "manage" ? C.red : C.muted, padding: "8px 18px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: 500, fontFamily: FONT, transition: "all .2s ease", boxShadow: calMode === "manage" ? "0 1px 4px rgba(255,69,58,.15)" : "none" }}>Manage availability</button>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", gap: "12px" }}>
@@ -578,23 +591,31 @@ function AdminView({ appointments, cancelAppointment, daysOff, toggleDayOff, blo
               {calDays.map((d, di) => {
                 const isToday = d === todayStr();
                 const dayParts = shortDay(d).split(" ");
+                const isDayOff = !!daysOff[`${loggedInBarber.id}_${d}`];
+                const canToggle = calMode === "manage";
                 return (
-                  <div key={d} className="cal-header" style={{
+                  <div key={d} className={`cal-header${canToggle ? " cal-header-manage" : ""}`} style={{
                     gridRow: 1, gridColumn: di + 2,
                     padding: "10px 4px 8px", textAlign: "center",
                     borderBottom: `0.5px solid ${C.border}`,
                     borderLeft: `0.5px solid ${C.border}`,
-                    background: C.card,
-                  }}>
-                    <div style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "0.5px", color: isToday ? C.gold : C.muted, textTransform: "uppercase" }}>
-                      {dayParts[0]}
+                    background: isDayOff ? "rgba(255,69,58,0.10)" : C.card,
+                    cursor: canToggle ? "pointer" : "default",
+                    transition: "background .2s ease",
+                  }} onClick={() => canToggle && toggleDayOff(loggedInBarber.id, d)}>
+                    <div style={{ fontSize: "10px", fontWeight: 500, letterSpacing: "0.5px", color: isDayOff ? C.red : (isToday ? C.gold : C.muted), textTransform: "uppercase" }}>
+                      {isDayOff ? "OFF" : dayParts[0]}
                     </div>
                     <div style={{
-                      fontSize: "18px", fontWeight: 600, color: isToday ? C.gold : C.text,
-                      ...(isToday ? { background: C.gold, color: "#000", width: "28px", height: "28px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", margin: "2px auto 0" } : { marginTop: "2px" }),
+                      fontSize: "18px", fontWeight: 600,
+                      color: isDayOff ? C.red : (isToday ? C.gold : C.text),
+                      ...(isToday && !isDayOff ? { background: C.gold, color: "#000", width: "28px", height: "28px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", margin: "2px auto 0" } : { marginTop: "2px" }),
                     }}>
                       {dayParts[1]}
                     </div>
+                    {isDayOff && (
+                      <div style={{ fontSize: "9px", fontWeight: 700, color: C.red, letterSpacing: "0.4px", marginTop: "2px" }}>DAY OFF</div>
+                    )}
                   </div>
                 );
               })}
@@ -611,14 +632,36 @@ function AdminView({ appointments, cancelAppointment, daysOff, toggleDayOff, blo
                   }}>
                     {h}
                   </div>
-                  {calDays.map((d, di) => (
-                    <div key={`${d}_${h}`} style={{
-                      gridRow: hi + 2, gridColumn: di + 2,
-                      borderBottom: `0.5px solid ${C.border}`,
-                      borderLeft: `0.5px solid ${C.border}`,
-                      minHeight: "40px",
-                    }} />
-                  ))}
+                  {calDays.map((d, di) => {
+                    const isDayOff = !!daysOff[`${loggedInBarber.id}_${d}`];
+                    const isBlocked = !!blockedSlots[`${loggedInBarber.id}_${d}_${h}`];
+                    const hasAppt = filtered.some(a => a.date === d && a.time === h);
+                    const canToggle = calMode === "manage" && !hasAppt;
+                    return (
+                      <div key={`${d}_${h}`} className={canToggle ? "cal-cell-manage" : ""}
+                        style={{
+                          gridRow: hi + 2, gridColumn: di + 2,
+                          borderBottom: `0.5px solid ${C.border}`,
+                          borderLeft: `0.5px solid ${C.border}`,
+                          minHeight: "40px",
+                          background: isDayOff ? "rgba(255,69,58,0.05)" : isBlocked ? "rgba(255,69,58,0.10)" : "transparent",
+                          cursor: canToggle ? "pointer" : "default",
+                          transition: "background .15s ease",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          position: "relative",
+                        }}
+                        onClick={() => {
+                          if (!canToggle) return;
+                          if (isDayOff) { toggleDayOff(loggedInBarber.id, d); return; }
+                          toggleBlockedSlot(loggedInBarber.id, d, h);
+                        }}
+                      >
+                        {isBlocked && !isDayOff && (
+                          <span style={{ fontSize: "11px", color: C.red, opacity: 0.6, pointerEvents: "none", userSelect: "none" }}>✕</span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
 
@@ -641,11 +684,13 @@ function AdminView({ appointments, cancelAppointment, daysOff, toggleDayOff, blo
                     padding: "3px 6px",
                     margin: "1px 3px",
                     overflow: "hidden",
-                    cursor: "pointer",
+                    cursor: calMode === "view" ? "pointer" : "default",
                     fontSize: "11px",
                     lineHeight: "1.35",
                     color: C.text,
-                  }} onClick={() => setSelectedAppt(a.id)}>
+                    position: "relative",
+                    zIndex: 1,
+                  }} onClick={() => calMode === "view" && setSelectedAppt(a.id)}>
                     <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {a.name}
                     </div>
@@ -753,55 +798,7 @@ function AdminView({ appointments, cancelAppointment, daysOff, toggleDayOff, blo
               </div>
             );
           })()}
-        </div>
-      )}
-
-      {tab==="schedule" && (
-        <div>
-          <p style={styles.scheduleNote}>Toggle your days off. Clients won't be able to book on days marked as off.</p>
-          <div style={styles.barberSection}>
-            <div style={{...styles.barberSectionTitle, color: loggedInBarber.color}}>✂ {loggedInBarber.name}'s Schedule</div>
-            <div className="day-off-grid" style={styles.dayOffGrid}>
-              {days.map(d=>{
-                const off = !!daysOff[`${loggedInBarber.id}_${d}`];
-                return (
-                  <button key={d}
-                    style={{...styles.dayOffBtn, ...(off?styles.dayOffActive:{})}}
-                    onClick={()=>toggleDayOff(loggedInBarber.id,d)}>
-                    <span style={styles.dayOffDow}>{dateLabel(d).split(",")[0]}</span>
-                    <span style={styles.dayOffMd}>{dateLabel(d).split(",")[1]}</span>
-                    <span style={styles.dayOffStatus}>{off?"✗ OFF":"✓ OPEN"}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: `0.5px solid ${C.border}` }}>
-            <h3 style={{ fontSize: "17px", color: C.text, fontWeight: 600, marginBottom: "8px", letterSpacing: "-0.2px" }}>Block specific times</h3>
-            <p style={styles.scheduleNote}>Block individual time slots. Clients won't be able to book blocked times.</p>
-            <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
-              <span style={styles.filterLabel}>Date:</span>
-              {days.slice(0, 7).map(d=>(
-                <button key={d} style={{...styles.filterBtn,...(blockDate===d?styles.filterActive:{})}}
-                  onClick={()=>setBlockDate(d)}>{dateLabel(d).split(",")[0]}</button>
-              ))}
-            </div>
-            <div className="time-grid" style={styles.timeGrid}>
-              {HOURS.map(h=>{
-                const blocked = !!blockedSlots[`${loggedInBarber.id}_${blockDate}_${h}`];
-                return (
-                  <button key={h}
-                    style={{...styles.timeBtn, ...(blocked?{ background: "rgba(255,69,58,0.08)", borderColor: C.red, color: C.red }:{})}}
-                    onClick={()=>toggleBlockedSlot(loggedInBarber.id, blockDate, h)}>
-                    {h}
-                    <span style={styles.takenDot}>{blocked?"✗":"✓"}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -864,34 +861,34 @@ function Section({ title, onBack, children }) {
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 const C = {
-  bg:      "#000000",
-  surface: "#1c1c1e",
-  card:    "#2c2c2e",
-  elevated:"#3a3a3c",
-  gold:    "#d4a843",
-  goldDim: "#9a7a2e",
-  goldLight:"rgba(212,168,67,0.12)",
-  text:    "#f5f5f7",
-  secondary:"#a1a1a6",
-  muted:   "#8e8e93",
-  red:     "#ff453a",
-  green:   "#30d158",
-  blue:    "#0a84ff",
-  border:  "#38383a",
-  borderLight:"#48484a",
+  bg:        "#0d0b09",
+  surface:   "#1a1612",
+  card:      "#252018",
+  elevated:  "#342e24",
+  gold:      "#e8b84b",
+  goldDim:   "#a07c2c",
+  goldLight: "rgba(232,184,75,0.13)",
+  text:      "#f2ede6",
+  secondary: "#c4bdb2",
+  muted:     "#8a8178",
+  red:       "#ff5549",
+  green:     "#2ecf60",
+  blue:      "#2196f3",
+  border:    "#3d3628",
+  borderLight:"#564e3c",
 };
 
 const FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif";
 const MONO = "'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace";
 
 const styles = {
-  root:       { fontFamily: FONT, background: C.bg, minHeight:"100vh", width:"100%", color: C.text, overflowX:"hidden", WebkitFontSmoothing:"antialiased", MozOsxFontSmoothing:"grayscale" },
-  nav:        { display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"12px", padding:"14px 28px", background: "rgba(28,28,30,0.85)", backdropFilter:"blur(20px) saturate(180%)", WebkitBackdropFilter:"blur(20px) saturate(180%)", borderBottom:`0.5px solid ${C.border}`, position:"sticky", top:0, zIndex:50 },
+  root:       { fontFamily: FONT, background: C.bg, minHeight:"100vh", width:"100%", color: C.text, overflowX:"hidden", WebkitFontSmoothing:"antialiased", MozOsxFontSmoothing:"grayscale", display:"flex", flexDirection:"column", alignItems:"center" },
+  nav:        { width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"12px", padding:"14px 28px", background: "rgba(26,22,18,0.88)", backdropFilter:"blur(20px) saturate(180%)", WebkitBackdropFilter:"blur(20px) saturate(180%)", borderBottom:`0.5px solid ${C.border}`, position:"sticky", top:0, zIndex:50 },
   logo:       { fontSize:"20px", fontWeight:700, letterSpacing:"3px", color: C.gold, fontFamily: MONO },
   navLinks:   { display:"flex", gap:"6px" },
   navBtn:     { background:"transparent", border:`1px solid ${C.border}`, color: C.muted, padding:"7px 18px", borderRadius:"8px", cursor:"pointer", fontSize:"12px", fontWeight:500, letterSpacing:"0.5px", textTransform:"uppercase", fontFamily: FONT, transition:"all .2s ease" },
   navActive:  { borderColor: C.gold, color: C.gold, background: C.goldLight },
-  bookingWrap:{ maxWidth:"680px", margin:"0 auto", padding:"32px 20px" },
+  bookingWrap:{ width:"100%", maxWidth:"760px", padding:"32px 32px", alignSelf:"center" },
   progress:   { display:"flex", gap:"2px", marginBottom:"36px", overflowX:"auto", padding:"0 4px" },
   progressStep:{ display:"flex", flexDirection:"column", alignItems:"center", gap:"8px", flex:1, minWidth:"56px" },
   progressDot:{ width:"36px", height:"36px", borderRadius:"50%", background: C.card, border:`1.5px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"13px", fontWeight:600, transition:"all .3s ease" },
@@ -903,11 +900,11 @@ const styles = {
   sectionTitle:{ fontSize:"24px", color: C.text, margin:0, fontWeight:600, letterSpacing:"-0.3px" },
   backBtn:    { background:"transparent", border:"none", color: C.muted, cursor:"pointer", fontSize:"15px", padding:"0", fontWeight:500, transition:"color .15s" },
   cardRow:    { display:"flex", gap:"14px", flexWrap:"wrap" },
-  barberCard: { background: C.card, border:`1.5px solid ${C.border}`, borderRadius:"16px", padding:"28px 32px", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:"14px", flex:1, minWidth:"120px", transition:"all .25s cubic-bezier(.4,0,.2,1)" },
+  barberCard: { background: C.card, border:`1.5px solid ${C.border}`, borderRadius:"16px", padding:"28px 32px", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:"14px", flex:1, minWidth:"120px" },
   barberAvatar:{ width:"60px", height:"60px", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"22px", fontWeight:700, color:"#fff", boxShadow:"0 4px 12px rgba(0,0,0,.3)" },
   barberName: { fontSize:"15px", color: C.text, fontWeight:600, letterSpacing:"0.3px" },
   serviceList:{ display:"flex", flexDirection:"column", gap:"8px" },
-  serviceCard:{ background: C.card, border:`1px solid ${C.border}`, borderRadius:"12px", padding:"16px 20px", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", transition:"all .2s cubic-bezier(.4,0,.2,1)" },
+  serviceCard:{ background: C.card, border:`1px solid ${C.border}`, borderRadius:"12px", padding:"16px 20px", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" },
   serviceName:{ fontSize:"15px", color: C.text, fontWeight:500 },
   serviceMeta:{ fontSize:"13px", color: C.muted },
   servicePrice:{ color: C.gold, fontWeight:600 },
@@ -924,18 +921,18 @@ const styles = {
   timeBtnTaken: { opacity:0.25, cursor:"not-allowed", textDecoration:"line-through" },
   takenDot:   { display:"block", fontSize:"8px", color: C.red, marginTop:"2px" },
   noSlots:    { color: C.muted, textAlign:"center", padding:"48px 0", fontSize:"14px" },
-  formWrap:   { display:"flex", flexDirection:"column", gap:"14px", maxWidth:"420px" },
-  summaryBox: { background: C.card, border:`1px solid ${C.border}`, borderRadius:"14px", padding:"18px 22px" },
+  formWrap:   { display:"flex", flexDirection:"column", gap:"14px", maxWidth:"420px", margin:"0 auto", width:"100%" },
+  summaryBox: { background: C.card, border:`1px solid ${C.border}`, borderTop:`3px solid ${C.gold}`, borderRadius:"14px", padding:"18px 22px" },
   summaryRow: { display:"flex", justifyContent:"space-between", margin:"7px 0", fontSize:"14px" },
   summaryLabel:{ color: C.muted, marginRight:"16px", fontWeight:500 },
   input:      { background: C.card, border:`1px solid ${C.border}`, borderRadius:"10px", padding:"13px 16px", color: C.text, fontSize:"15px", outline:"none", fontFamily: FONT, transition:"border-color .2s ease" },
   primaryBtn: { background: C.gold, border:"none", borderRadius:"12px", padding:"14px 28px", color:"#000", fontSize:"15px", fontWeight:600, cursor:"pointer", letterSpacing:"0.3px", transition:"all .2s ease", fontFamily: FONT },
-  center:     { display:"flex", justifyContent:"center", alignItems:"center", minHeight:"min(60vh, 400px)", padding:"20px" },
-  confirmBox: { background: C.surface, border:`1px solid ${C.border}`, borderRadius:"20px", padding:"40px 32px", textAlign:"center", maxWidth:"400px", width:"100%", boxShadow:"0 8px 32px rgba(0,0,0,.3)" },
+  center:     { width:"100%", display:"flex", justifyContent:"center", alignItems:"center", minHeight:"min(60vh, 400px)", padding:"20px 32px" },
+  confirmBox: { background: C.surface, border:`1px solid ${C.border}`, borderRadius:"20px", padding:"40px 40px", textAlign:"center", maxWidth:"460px", width:"100%", boxShadow:"0 8px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)" },
   checkmark:  { fontSize:"56px", color: C.green, marginBottom:"16px" },
   confirmTitle:{ fontSize:"22px", color: C.text, marginBottom:"12px", fontWeight:600 },
   confirmDetail:{ color: C.muted, margin:"6px 0", fontSize:"14px" },
-  adminWrap:  { maxWidth:"1060px", margin:"0 auto", padding:"28px 20px" },
+  adminWrap:  { width:"100%", maxWidth:"1060px", padding:"28px 20px" },
   adminTitle: { fontSize:"28px", color: C.text, fontWeight:600, letterSpacing:"-0.5px", marginBottom:"24px" },
   tabBar:     { display:"flex", gap:"4px", marginBottom:"28px", background: C.card, borderRadius:"10px", padding:"3px" },
   tabBtn:     { background:"transparent", border:"none", color: C.muted, padding:"10px 22px", borderRadius:"8px", cursor:"pointer", fontSize:"13px", fontWeight:500, letterSpacing:"0.3px", fontFamily: FONT, transition:"all .2s ease" },
@@ -962,7 +959,7 @@ const styles = {
   dayOffDow:  { fontSize:"10px", color: C.muted, textTransform:"uppercase", letterSpacing:"0.5px", fontWeight:500 },
   dayOffMd:   { fontSize:"13px", fontWeight:600 },
   dayOffStatus:{ fontSize:"9px", fontFamily: MONO, letterSpacing:"0.5px", fontWeight:600 },
-  loginBox:   { background: C.surface, border:`1px solid ${C.border}`, borderRadius:"20px", padding:"40px 32px", textAlign:"center", width:"min(340px, 100%)", maxWidth:"100%", display:"flex", flexDirection:"column", gap:"14px", boxShadow:"0 8px 32px rgba(0,0,0,.3)" },
+  loginBox:   { background: C.surface, border:`1px solid ${C.border}`, borderRadius:"20px", padding:"40px 32px", textAlign:"center", width:"min(340px, 100%)", maxWidth:"100%", display:"flex", flexDirection:"column", gap:"14px", boxShadow:"0 8px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)" },
   loginIcon:  { fontSize:"44px" },
   loginTitle: { fontSize:"20px", color: C.text, fontWeight:600, margin:0 },
   error:      { color: C.red, fontSize:"13px", margin:0, fontWeight:500 },
@@ -972,32 +969,116 @@ const styles = {
 
 const css = `
   * { box-sizing: border-box; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-  .booking-app { width: 100%; max-width: 100vw; }
+  /* ── Core fade+slide (step transitions) ── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-  .bcard { transition: transform .2s cubic-bezier(.4,0,.2,1), box-shadow .2s ease, border-color .2s ease; }
-  .bcard:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.25); border-color: ${C.borderLight} !important; }
-  .bcard:active { transform: translateY(0); }
+  /* ── Staggered slide-up for cards ── */
+  @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
+  /* ── Checkmark pop on success ── */
+  @keyframes checkPop {
+    0%   { transform: scale(0); opacity: 0; }
+    60%  { transform: scale(1.25); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  /* ── Progress dot fill pulse ── */
+  @keyframes dotFill { from { transform: scale(0.7); } to { transform: scale(1); } }
+
+  /* ── Backdrop fade ── */
+  @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ── Modal entrance ── */
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.93) translateY(12px); } to { opacity: 1; transform: none; } }
+
+  /* ── Progress connector fill ── */
+  @keyframes connectorFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  .booking-app { width: 100%; }
+
+  /* Cards — base transition (no card-group context) */
+  .bcard { transition: transform .28s cubic-bezier(.4,0,.2,1), box-shadow .28s ease, border-color .28s ease, opacity .28s ease; }
+  .bcard:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.35); border-color: ${C.borderLight} !important; }
+  .bcard:active { transform: scale(0.97) !important; box-shadow: none !important; }
+
+  /* Focus/shrink: hovered card grows, siblings shrink — spring easing */
+  .card-group .bcard { transition: transform .35s cubic-bezier(.34,1.3,.64,1), opacity .35s ease, box-shadow .35s ease; }
+  .card-group:has(.bcard:hover) .bcard { transform: scale(0.93); opacity: 0.65; }
+  .card-group .bcard:hover { transform: scale(1.06) translateY(-3px) !important; opacity: 1 !important; box-shadow: 0 12px 32px rgba(0,0,0,.45) !important; z-index: 2; }
+
+  /* Barber / service card wrappers — slide-in animation only */
+  .barber-card { animation: slideUp .35s cubic-bezier(.4,0,.2,1) both; }
+  .service-card { animation: slideUp .3s cubic-bezier(.4,0,.2,1) both; }
+
+  /* Date/time button presses */
+  .date-btn:active, .time-btn:active { transform: scale(0.94); transition: transform .1s; }
+
+  /* Glowing active states */
+  .date-btn-active { box-shadow: 0 0 0 3px rgba(232,184,75,0.28) !important; }
+  .time-btn-active { box-shadow: 0 0 0 3px rgba(232,184,75,0.28) !important; }
+
+  /* Checkmark */
+  .checkmark { animation: checkPop .55s cubic-bezier(.175,.885,.32,1.275) both; }
+
+  /* Progress dots */
+  .progress-dot-done { animation: dotFill .25s cubic-bezier(.4,0,.2,1); }
+
+  /* Input focus */
   input:focus { border-color: ${C.gold} !important; box-shadow: 0 0 0 3px ${C.goldLight} !important; }
 
   button { font-family: ${FONT}; }
 
+  /* Nav */
   .booking-nav { backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); }
+  .nav-btn { position: relative; overflow: hidden; }
+  .nav-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 3px; left: 50%;
+    width: 0; height: 1.5px;
+    background: ${C.gold};
+    transform: translateX(-50%);
+    transition: width .2s ease;
+    border-radius: 1px;
+  }
+  .nav-btn:hover::after { width: 60%; }
 
+  /* Calendar blocks */
   .cal-block { transition: all .15s cubic-bezier(.4,0,.2,1); }
-  .cal-block:hover { box-shadow: 0 2px 10px rgba(0,0,0,.4); z-index: 5 !important; filter: brightness(1.15); }
+  .cal-block:hover { filter: brightness(1.2) saturate(1.2); box-shadow: 0 3px 14px rgba(0,0,0,.5); z-index: 5 !important; }
+
+  .cal-header-manage:hover { background: rgba(255,69,58,0.18) !important; }
+  .cal-cell-manage:hover { background: rgba(255,69,58,0.18) !important; }
 
   .cal-nav-btn:hover { border-color: ${C.gold} !important; color: ${C.gold} !important; }
   .cal-popover { animation: fadeIn .2s cubic-bezier(.4,0,.2,1); }
 
-  .cancel-btn:hover { background: rgba(255,69,58,0.18) !important; }
+  /* Cancel button */
+  .cancel-btn:hover { background: rgba(255,85,73,0.18) !important; }
 
+  /* Modals */
   .modal-backdrop { animation: backdropIn .2s ease; }
-  @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
-  .modal-card { animation: modalIn .25s cubic-bezier(.4,0,.2,1); }
-  @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: none; } }
+  .modal-card { animation: modalIn .28s cubic-bezier(.4,0,.2,1); }
+
+  /* Progress connector */
+  .progress-connector {
+    flex: 1;
+    height: 2px;
+    background: ${C.border};
+    border-radius: 1px;
+    margin-top: -22px;
+    min-width: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-connector-fill {
+    height: 100%;
+    background: ${C.gold};
+    border-radius: 1px;
+    transform-origin: left;
+    animation: connectorFill .35s cubic-bezier(.4,0,.2,1) both;
+  }
 
   .admin-calendar { -webkit-overflow-scrolling: touch; }
 
@@ -1030,5 +1111,7 @@ const css = `
     .cal-grid { grid-template-columns: 42px repeat(7, 1fr) !important; grid-template-rows: auto repeat(${HOURS.length}, 28px) !important; min-width: 420px !important; }
     .cal-block { font-size: 8px !important; padding: 1px 2px !important; margin: 0 1px !important; }
     .cal-popover { min-width: 180px !important; padding: 12px !important; border-radius: 10px !important; }
+
+    .progress-connector { min-width: 4px !important; }
   }
 `;
